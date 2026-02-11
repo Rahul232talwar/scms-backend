@@ -10,6 +10,7 @@ class Auth(TenantBase, SoftDeleteMixin):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
     email= Column(String(100), nullable=False, unique=True)
     password= Column(String(255), nullable=False)
+    refresh_token = Column(String(500), nullable=True)
     user_id= Column(
         String(36),
         ForeignKey("users.id",ondelete="CASCADE", onupdate="CASCADE"),

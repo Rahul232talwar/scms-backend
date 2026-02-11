@@ -5,6 +5,7 @@ from urllib.parse import quote_plus
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.orm import declarative_base
+from app.models.masterModels.tenantDB import TenantDB
 load_dotenv()
 
 TenantBase = declarative_base()
@@ -22,7 +23,7 @@ def get_tenant_session(DB_NAME):
     
     engine = create_engine(db_url)
     Session = sessionmaker(bind=engine)
-    return engine, Session()
+    return {"engine":engine, "session": Session()}
     
   
 
@@ -55,3 +56,9 @@ def create_tenant_database(DB_NAME):
             connection.close()
         
 
+def get_dbName(company_name):
+    masterAdmin = TenantDB.query.filter_by(slug=company_name).first()
+    if not masterAdmin:
+        raise ValueError("Company not found")
+        
+    return masterAdmin.dbName

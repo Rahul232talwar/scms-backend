@@ -21,17 +21,31 @@ def register_tenant_relationships():
         lazy="selectin"
     )
 
-    User.auths = relationship(
+    User.auth = relationship(
         "Auth",
-        back_populates="users",
+        back_populates="user",
         uselist=False,
         cascade="all, delete",
         lazy="selectin"
     )
 
-    Auth.users = relationship(
+    Auth.user = relationship(
         "User",
-        back_populates="auths",
+        back_populates="auth",
+        lazy="joined"
+    )
+
+    Role.auth = relationship(
+        "Auth",
+        back_populates="role",
+        uselist=False,
+        cascade="all, delete",
+        lazy="selectin"
+    )
+
+    Auth.role = relationship(
+        "Role",
+        back_populates="auth",
         lazy="joined"
     )
 

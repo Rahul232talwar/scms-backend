@@ -7,11 +7,12 @@ from app.models.masterModels.tenantDB import TenantDB
 from app.tenant_extensions import get_tenant_session
 from app.utils.response import success_response, error_response
 from app.tenant_extensions import TenantBase
-from app.models.tenantModels.tenant_relationships import register_tenant_relationships
 from app.models.tenantModels.tenant_seed.seed_roles_and_permissions import seed_roles_and_permissions
 from app.models.tenantModels.user import User
 from app.models.tenantModels.auth import Auth
 from app.models.tenantModels.Role_And_Permission.role import Role
+from sqlalchemy.inspection import inspect
+mapper = inspect(Auth)
 load_dotenv()
 
 def admin_register(data):
@@ -38,14 +39,18 @@ def admin_register(data):
 
         new_user, new_tenant = create_master_admin(data)
 
-        engine, session = get_tenant_session(new_tenant.dbName)
+        result = get_tenant_session(new_tenant.dbName)
+
+        engine= result.get("engine")
+        session = result.get("session")
   
         if not(engine and session):
             raise RuntimeError("FAILED_TO_INIT_TENANT_DB")
             
-        register_tenant_relationships()
         TenantBase.metadata.create_all(engine)
         seed_roles_and_permissions(session)
+        for relation in mapper.relationships:
+            print(relation.key, "->", relation.mapper.class_.__tablename__)
 
         tenant_user,tenant_auth = create_tenant_admin(session, data)
 
@@ -81,7 +86,7 @@ def admin_register(data):
 
 def create_master_admin(data):
   
-    userExist = MasterAdmin.query.filter_by(company_email=data.get("companyEmail")).first()
+    userExist = MasterAdmin.query.filter_by(company_email=data.get("company_email")).first()
 
     if userExist:
         raise ValueError("User already exists")
@@ -124,17 +129,17 @@ def create_master_admin(data):
     
 def create_tenant_admin(session, data):
     tenant_user= User(
-        first_name=data["first_name"],
-        middle_name=data["middle_name"],
-        last_name=data["last_name"],
-        company_name=data["company_name"],
-        company_email=data["company_email"],
-        company_phone=data["company_phone"],
-        company_address=data["company_address"],
-        city=data["city"],
-        state=data["state"],
-        pincode=data["pincode"],
-        country=data["country"]
+        first_name=data.get("first_name"),
+        middle_name=data.get("middle_name"),
+        last_name=data.get("last_name"),
+        company_name=data.get("company_name"),
+        company_email=data.get("company_email"),
+        company_phone=data.get("company_phone"),
+        company_address=data.get("company_address"),
+        city=data.get("city"),
+        state=data.get("state"),
+        pincode=data.get("pincode"),
+        country=data.get("country")
     )
     session.add(tenant_user)
     session.flush()
